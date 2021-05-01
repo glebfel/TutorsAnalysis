@@ -25,6 +25,7 @@ class ProfiParser():
         self.cat_profiles_dict = {}
         self.conf_info = self.read_config(config_file)
 
+
     def read_config(self, config_file: str) -> dict:
         """
         Parses config file disposed in same folder as this script
@@ -38,6 +39,7 @@ class ProfiParser():
         except FileNotFoundError:
             print(f'Config file {config_file} is not found!')
             return {}
+
 
     def create_base(self):
         """
@@ -53,12 +55,14 @@ class ProfiParser():
             pass
         base_connector.close()
 
+
     def write_json_backup(self, cat_name: str, data: list):
         """
         Prepares backup for parsed data
         """
         with open(f"{cat_name}_data_file.json", "w") as write_file:
             json.dump(data, write_file)
+
 
     def create_and_write_table(self, table_name: str, profi_data: list):
         """
@@ -91,6 +95,7 @@ class ProfiParser():
         base_connector.cursor().close()
         print(f"--End of writing table for {table_name}")
 
+
     def get_cat_links(self):
         """
         Gets categories and their links for later parsing
@@ -117,6 +122,7 @@ class ProfiParser():
         self.link_list.append(self.link_list.pop(self.link_list.index('https://profi.ru/repetitor/english/')))
         print(f'--Found {len(self.link_list) + len(self.others_links)} categories')
 
+
     def get_person_info(self, link: str) -> dict:
         """
         Parses person by link and returns dictionary with reviews, education info, tution experience, prices, etc.
@@ -133,7 +139,6 @@ class ProfiParser():
                 # удаление лишних элементов из текста
                 final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
                 person_info["Education"] =  final_info[0]
-
         #Get tution experience
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
@@ -146,7 +151,6 @@ class ProfiParser():
                     years = re.split(r"[(гл–]", text)
                     person_info["Experience"] =  years[2]
                     break;
-
         except Exception as e:
             print(e)
         # Get reviews
@@ -180,6 +184,7 @@ class ProfiParser():
                 person_info[subj] = price
         return person_info
 
+
     def get_profis_by_cat(self, cat_link: str):
         """
         Gets list of repetitors (or other profi) by category link
@@ -198,6 +203,7 @@ class ProfiParser():
         profiles = self.driver.find_elements_by_xpath('//a[@data-shmid="desktop-profile__avatar"]')
         profiles_links = [person.get_attribute("href") for person in profiles]
         return profiles_links
+
 
     def parse_info(self):
         self.create_base()
@@ -223,6 +229,7 @@ class ProfiParser():
                 self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
                 self.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
+
 
     def test(self):
         print("--This is a test run for only hindi category")
