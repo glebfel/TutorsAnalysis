@@ -143,13 +143,22 @@ class ProfiParser():
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
                 text = block[1].text
+                index = text.find('(')
                 if(text.find("Репетиторский опыт") != -1 or text.find("Опыт репетиторства") != -1): 
-                    years = re.split(r"[(л–]", text)
-                    person_info["Experience"] =  years[1]
+                    if(index != -1):
+                        years = text[index+1:index+3]
+                        person_info["Experience"] =  years
+                    else:
+                        years = re.split(r"[(л–]", text)
+                        person_info["Experience"] =  years[1]
                     break;
                 elif (text.find("Репетиторская деятельность") != -1):
-                    years = re.split(r"[(гл–]", text)
-                    person_info["Experience"] =  years[2]
+                    if(index != -1):
+                        years = text[index+1:index+3]
+                        person_info["Experience"] =  years
+                    else:
+                        years = re.split(r"[(гл–]", text)
+                        person_info["Experience"] =  years[2]
                     break;
         except Exception as e:
             print(e)
@@ -236,7 +245,7 @@ class ProfiParser():
         self.create_base()
         self.driver = webdriver.Chrome()
         category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-        test_profis = [self.get_person_info(person_link) for person_link in category_profiles[:1]]
+        test_profis = [self.get_person_info(person_link) for person_link in category_profiles]
         self.write_json_backup("hindi", test_profis)
         self.create_and_write_table("hindi", test_profis)
         self.driver.quit()
