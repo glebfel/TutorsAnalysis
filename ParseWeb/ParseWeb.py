@@ -129,17 +129,15 @@ class ProfiParser():
         try:
             personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
             if(personal_block.text.find("Образование") != -1):
-                personal_block = personal_block.find_elements_by_tag_name('div')
-                info = personal_block[0].text
+                div_blocks = personal_block.find_elements_by_tag_name('div')
                 # удаление лишних элементов из текста
-                final_info = re.split(r"[,;1234567890()]", info)
+                final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
                 person_info["Education"] =  final_info[0]
         except Exception as e:
            print(e)
 
         #Get tution experience
         try:
-            personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
                 text = block[1].text
