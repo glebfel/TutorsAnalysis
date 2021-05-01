@@ -133,11 +133,8 @@ class ProfiParser():
                 # удаление лишних элементов из текста
                 final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
                 person_info["Education"] =  final_info[0]
-        except Exception as e:
-           print(e)
 
         #Get tution experience
-        try:
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
                 text = block[1].text
