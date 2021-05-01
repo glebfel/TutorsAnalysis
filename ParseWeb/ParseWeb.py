@@ -4,6 +4,9 @@ import string
 import pymysql
 from time import sleep
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 
 
@@ -131,7 +134,7 @@ class ProfiParser():
         person_info = {}
         # Get person name
         person_info["Fullname"] = self.driver.find_element_by_xpath('//h1[@data-shmid="profilePrepName"]').text
-        #Get education info
+        # Get education info
         try:
             personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
             if(personal_block.text.find("Образование") != -1):
@@ -139,7 +142,7 @@ class ProfiParser():
                 # удаление лишних элементов из текста
                 final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
                 person_info["Education"] =  final_info[0]
-        #Get tution experience
+        # Get tution experience
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
                 text = block[1].text
@@ -162,6 +165,22 @@ class ProfiParser():
                     break;
         except Exception as e:
             print(e)
+        # Get working methods
+        methods_block = self.driver.find_element_by_xpath("//div[@class='_3z3XSoj']")
+
+        if(methods_block.text.find("Работает дистанционно") != -1):
+            person_info["Remote_work"] =  "+"
+        else:
+            person_info["Remote_work"] =  "-"
+        if(methods_block.text.find("Принимает у себя") != -1):
+            person_info["Hosts_work"] =  "+"
+        else:
+            person_info["Hosts_work"] =  "-"
+        if(methods_block.text.find("Выезд к клиенту") != -1):
+            person_info["Departure_to_the_client"] =  "+"
+        else:
+            person_info["Departure_to_the_client"] =  "-"
+
         # Get reviews
         reviews_block = self.driver.find_element_by_xpath('//div[@data-shmid="ProfileTabsBlock_bar"]')
         reviews = reviews_block.find_elements_by_tag_name('span')
@@ -199,16 +218,18 @@ class ProfiParser():
         Gets list of repetitors (or other profi) by category link
         """
         self.driver.get(cat_link)
-        sleep(5)
-        next_button = self.driver.find_element_by_xpath('//a[@data-shmid="pagination_next"]')
-        while next_button:
-            next_button.click()
-            sleep(8)
+        # waiting for button to upload
+        button = WebDriverWait(self.driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, '//a[@data-shmid="pagination_next"]')))
+        while button:
+            button.click()
+            # waiting for page to upload
             try:
-                next_button = self.driver.find_element_by_xpath('//a[@data-shmid="pagination_next"]')
-            except NoSuchElementException:
+                button = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '//a[@data-shmid="pagination_next"]')))
+            except:
                 print("End of category")
-                next_button = False
+                button = False
         profiles = self.driver.find_elements_by_xpath('//a[@data-shmid="desktop-profile__avatar"]')
         profiles_links = [person.get_attribute("href") for person in profiles]
         return profiles_links
