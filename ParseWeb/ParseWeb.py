@@ -13,6 +13,7 @@ from WriteToDatabase import WriteToDatabase
 
 class ProfiParser():
 
+    MAIN_URL = "https://profi.ru/services/repetitor/"
     profile_suffix = r'?seamless=1&tabName=PROFILES'
     rate_list = ['FiveRate', 'FourRate', 'ThreeRate', 'TwoRate', 'OneRate']
     other_links_dict = {'Другие языки': 'languages',
@@ -43,7 +44,7 @@ class ProfiParser():
         """
         print("--Gathering category list")
         category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
-        self.driver.get(self.conf_info['main_url'])
+        self.driver.get(MAIN_URL)
         categories = self.driver.find_elements_by_class_name("services-catalog__content")
         elems = categories[0].find_elements_by_xpath("//a[@class]")
         search_cat = True
