@@ -133,7 +133,6 @@ class ProfiParser():
         try:
             price_button = self.driver.find_element_by_xpath('//a[@data-shmid="pricesMore"]')
             price_button.click()
-            #self.driver.implicitly_wait(2)
         except:
             pass
         prices = self.driver.find_elements_by_xpath('//tr[@data-shmid="priceRow"]')
