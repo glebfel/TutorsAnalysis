@@ -1,5 +1,4 @@
 import re
-import os
 import json
 import string
 from time import sleep
@@ -31,10 +30,7 @@ class ProfiParser():
         """
         Prepares backup for parsed data
         """
-        if not os.path.isdir("json_data"):
-            os.mkdir("json_data")
-
-        with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
+        with open(f"{cat_name}_data_file.json", "w") as write_file:
             json.dump(data, write_file)
 
     def get_cat_links(self):
