@@ -48,7 +48,7 @@ class WriteToDatabase():
         columns = list(profi_data[0].keys())
         for profi in profi_data[1:]:
             for key in profi.keys():
-                if key not in columns:
+                if (key not in columns and len(columns) <= 500):
                     columns.append(key)
         # Create table and insert columns
         print(f"--Start writing table for {table_name}")
