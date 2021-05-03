@@ -204,7 +204,7 @@ class ProfiParser():
         database.create_base()
         self.driver = webdriver.Chrome()
         category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-        test_profis = [self.get_person_info(person_link) for person_link in category_profiles[:1]]
+        test_profis = [self.get_person_info(person_link) for person_link in category_profiles]
         self.write_json_backup("hindi", test_profis)
         database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
