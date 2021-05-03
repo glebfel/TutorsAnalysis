@@ -4,13 +4,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>857648ab-a4f5-4372-b4c1-d5c1f6d40b21</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>test.py</StartupFile>
+    <StartupFile>Test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>ParseWeb</Name>
     <RootNamespace>ParseWeb</RootNamespace>
+    <TestFramework>unittest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,8 +22,14 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ParseWeb.py" />
-    <Compile Include="test.py">
+    <Compile Include="Run.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WriteToDatabase.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

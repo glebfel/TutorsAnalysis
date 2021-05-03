@@ -1,13 +1,13 @@
 import re
 import json
 import string
-import pymysql
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
+from WriteToDatabase import WriteToDatabase
 
 
 class ProfiParser():
@@ -17,47 +17,14 @@ class ProfiParser():
     other_links_dict = {'Другие языки': 'languages',
                         'Интеллектуальные игры': 'int_games',
                         'Подготовка к экзаменам': 'exams'}
-
     
-    def __init__(self, config_file: str = 'config.conf'):
+    def __init__(self):
         """
         Class constructor
         """
         self.link_list = []
         self.others_links = []
         self.cat_profiles_dict = {}
-        self.conf_info = self.read_config(config_file)
-
-
-    def read_config(self, config_file: str) -> dict:
-        """
-        Parses config file disposed in same folder as this script
-        and returns search url and database info.
-        """
-        try:
-            with open(config_file, 'r') as f:
-                data = f.read().split('\n')
-                conf_info = {line.split(': ')[0]: line.split(': ')[1] for line in data if line != ''}
-                return conf_info
-        except FileNotFoundError:
-            print(f'Config file {config_file} is not found!')
-            return {}
-
-
-    def create_base(self):
-        """
-        Creates database if it does not exists
-        """
-        base_connector = pymysql.connect(host=self.conf_info['host'],
-                                         user=self.conf_info['login'],
-                                         password=self.conf_info['password'])
-        try:
-            base_connector.cursor().execute(f"create database {self.conf_info['database']}")
-        except pymysql.ProgrammingError:
-            print(f"Database with name {self.conf_info['database']} already exists")
-            pass
-        base_connector.close()
-
 
     def write_json_backup(self, cat_name: str, data: list):
         """
@@ -65,39 +32,6 @@ class ProfiParser():
         """
         with open(f"{cat_name}_data_file.json", "w") as write_file:
             json.dump(data, write_file)
-
-
-    def create_and_write_table(self, table_name: str, profi_data: list):
-        """
-        Creates table for input category and writes data
-        """
-        base_connector = pymysql.connect(host=self.conf_info['host'],
-                                         database=self.conf_info['database'],
-                                         user=self.conf_info['login'],
-                                         password=self.conf_info['password'])
-        # Get list of columns for table
-        columns = list(profi_data[0].keys())
-        for profi in profi_data[1:]:
-            for key in profi.keys():
-                if key not in columns:
-                    columns.append(key)
-        # Create table and insert columns
-        print(f"--Start writing table for {table_name}")
-        column_insert = " TEXT, ".join([f"{column}" for column in columns])
-        query_text = f'create table {table_name} ({column_insert} TEXT)'
-        base_connector.cursor().execute(query_text)
-        # Insert every person
-        for person in profi_data:
-            person_columns = list(person.keys())
-            person_column_insert = ", ".join([f"{column}" for column in person_columns])
-            person_values = list(person.values())
-            person_values_insert = ", ".join([f"'{column}'" for column in person_values])
-            person_query = f"insert into {table_name} ({person_column_insert}) values ({person_values_insert})"
-            base_connector.cursor().execute(person_query)
-            base_connector.commit()
-        base_connector.cursor().close()
-        print(f"--End of writing table for {table_name}")
-
 
     def get_cat_links(self):
         """
@@ -180,7 +114,6 @@ class ProfiParser():
             person_info["Departure_to_the_client"] =  "+"
         else:
             person_info["Departure_to_the_client"] =  "-"
-
         # Get reviews
         reviews_block = self.driver.find_element_by_xpath('//div[@data-shmid="ProfileTabsBlock_bar"]')
         reviews = reviews_block.find_elements_by_tag_name('span')
@@ -200,7 +133,7 @@ class ProfiParser():
         try:
             price_button = self.driver.find_element_by_xpath('//a[@data-shmid="pricesMore"]')
             price_button.click()
-            sleep(5)
+            #self.driver.implicitly_wait(2)
         except:
             pass
         prices = self.driver.find_elements_by_xpath('//tr[@data-shmid="priceRow"]')
@@ -211,7 +144,6 @@ class ProfiParser():
                 price = columns[1].text.split(" ₽ / ")[0]
                 person_info[subj] = price
         return person_info
-
 
     def get_profis_by_cat(self, cat_link: str):
         """
@@ -234,9 +166,12 @@ class ProfiParser():
         profiles_links = [person.get_attribute("href") for person in profiles]
         return profiles_links
 
-
-    def parse_info(self):
-        self.create_base()
+    def parse(self):
+        """
+        Parse all categories in JSON-files and MySQL database tables
+        """
+        database = WriteToDatabase()
+        database.createbase()
         self.driver = webdriver.Chrome()
         # Get categories
         self.get_cat_links()
@@ -247,7 +182,7 @@ class ProfiParser():
             category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
             self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in category_profiles]
             self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
-            self.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
@@ -257,20 +192,16 @@ class ProfiParser():
                 self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in
                                                     category_profiles]
                 self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
-                self.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+                database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
-
 
     def test(self):
         print("--This is a test run for only hindi category")
-        self.create_base()
+        database = WriteToDatabase()
+        database.create_base()
         self.driver = webdriver.Chrome()
         category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
         test_profis = [self.get_person_info(person_link) for person_link in category_profiles]
         self.write_json_backup("hindi", test_profis)
-        self.create_and_write_table("hindi", test_profis)
+        database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
-
-if __name__ == '__main__':
-    Parser = ProfiParser()
-    Parser.parse_info()
