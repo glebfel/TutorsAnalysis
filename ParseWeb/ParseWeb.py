@@ -44,7 +44,7 @@ class ProfiParser():
         """
         print("--Gathering category list")
         category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
-        self.driver.get(MAIN_URL)
+        self.driver.get(self.MAIN_URL)
         categories = self.driver.find_elements_by_class_name("services-catalog__content")
         elems = categories[0].find_elements_by_xpath("//a[@class]")
         search_cat = True
