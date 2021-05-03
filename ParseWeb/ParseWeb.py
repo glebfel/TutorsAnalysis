@@ -174,7 +174,7 @@ class ProfiParser():
         Parse all categories in JSON-files and MySQL database tables
         """
         database = WriteToDatabase()
-        database.createbase()
+        database.create_base()
         self.driver = webdriver.Chrome()
         # Get categories
         self.get_cat_links()
