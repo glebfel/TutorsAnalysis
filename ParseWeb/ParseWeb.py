@@ -1,4 +1,5 @@
 import re
+import os
 import json
 import string
 from time import sleep
@@ -30,7 +31,10 @@ class ProfiParser():
         """
         Prepares backup for parsed data
         """
-        with open(f"{cat_name}_data_file.json", "w") as write_file:
+        if not os.path.isdir("json_data"):
+            os.mkdir("json_data")
+
+        with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
             json.dump(data, write_file)
 
     def get_cat_links(self):
@@ -200,7 +204,7 @@ class ProfiParser():
         database.create_base()
         self.driver = webdriver.Chrome()
         category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-        test_profis = [self.get_person_info(person_link) for person_link in category_profiles]
+        test_profis = [self.get_person_info(person_link) for person_link in category_profiles[:1]]
         self.write_json_backup("hindi", test_profis)
         database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
