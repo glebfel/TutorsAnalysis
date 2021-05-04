@@ -182,7 +182,10 @@ class ProfiParser():
         """
         database = WriteToDatabase()
         database.create_base()
-        self.driver = webdriver.Chrome()
+        #supress Webdriver logging
+        options = webdriver.ChromeOptions() 
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.driver = webdriver.Chrome(options=options)
         # Get categories
         self.get_cat_links()
         # Treat general categories
