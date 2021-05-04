@@ -55,6 +55,7 @@ class WriteToDatabase():
         columns = list(profi_data[0].keys())
         for profi in profi_data[1:]:
             for key in profi.keys():
+                # Create limit for the number of columns to avoid "too many columns exception" in db
                 if (key not in columns and len(columns) <= 500):
                     columns.append(key)
         # Create table and insert columns
@@ -62,8 +63,13 @@ class WriteToDatabase():
         column_insert = " TEXT, ".join([f"`{column}`" for column in columns])
         query_text = f'create table `{table_name}` ({column_insert} TEXT)'
         base_connector.cursor().execute(query_text)
+        # Clean profi_data from excess columns
+        clean_profi_data = {}
+        for pair in profi_data:
+            if(pair[0] in columns):
+                clean_profi_data.update(pair)
         # Insert every person
-        for person in profi_data:
+        for person in clean_profi_data:
             person_columns = list(person.keys())
             person_column_insert = ", ".join([f"`{column}`" for column in person_columns])
             person_values = list(person.values())
