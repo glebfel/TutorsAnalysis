@@ -49,6 +49,9 @@ class WriteToDatabase():
                                          user=self.conf_info['login'],
                                          password=self.conf_info['password'])
         # Get list of columns for table
+            # Check if profi_data is empty
+        if not profi_data:
+            return
         columns = list(profi_data[0].keys())
         for profi in profi_data[1:]:
             for key in profi.keys():

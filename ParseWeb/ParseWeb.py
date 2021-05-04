@@ -45,11 +45,14 @@ class ProfiParser():
         Gets categories and their links for later parsing
         """
         self.logger.info("Gathering category list...")
-
-        category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
-        self.driver.get(self.MAIN_URL)
-        categories = self.driver.find_elements_by_class_name("services-catalog__content")
-        elems = categories[0].find_elements_by_xpath("//a[@class]")
+        try:
+            category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
+            self.driver.get(self.MAIN_URL)
+            categories = self.driver.find_elements_by_class_name("services-catalog__content")
+            elems = categories[0].find_elements_by_xpath("//a[@class]")
+        except:
+            self.logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
+            return
         search_cat = True
         # Compose two links lists: for subject categories, and for generic categories
         for i, elem in enumerate(elems):
@@ -185,25 +188,45 @@ class ProfiParser():
         # Treat general categories
         for category in self.link_list:
             cat_name = category.split('/')[-2]
-            # check if categroy is already parsed
+            # Check if categroy is already parsed
             if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
                 self.logger.warning(f'{cat_name} category is already parsed!')
                 continue
             self.logger.info(f'Treating {cat_name} category')
-            category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
-            self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in category_profiles]
-            self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
-            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+            counter = 0
+            person_info = {}
+            try:
+                category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
+                self.logger.info(f'Found {len(category_profiles)} profiles in {cat_name} category')
+                for person_link in category_profiles:
+                    person_info.update(self.get_person_info(person_link))
+                    counter+=1
+            except:
+                self.logger.critical("Problems with Internet connection or Web driver occured!")
+                self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
+            self.cat_profiles_dict[cat_name] = person_info
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
+            # Check if categroy is already parsed
+            if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
+                self.logger.warning(f'{cat_name} category is already parsed!')
+                continue
             self.logger.info(f'Treating {cat_name} category')
-            for category in cat_list[1:]:
+            counter = 0
+            person_info = {}
+            try:
                 category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
-                self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in
-                                                    category_profiles]
-                self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
-                database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+                self.logger.info(f'Found {len(category_profiles)} profiles in {cat_name} category')
+                for person_link in category_profiles:
+                    person_info.update(self.get_person_info(person_link))
+                    counter+=1
+            except:
+                self.logger.critical("Problems with Internet connection or Web driver occured!")
+                self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
+            self.cat_profiles_dict[cat_name] = person_info
+        self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+        database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
 
     def test(self):
@@ -211,8 +234,16 @@ class ProfiParser():
         database = WriteToDatabase()
         database.create_base()
         self.driver = webdriver.Chrome()
-        category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-        test_profis = [self.get_person_info(person_link) for person_link in category_profiles[:2]]
+        counter = 0
+        test_profis = {}
+        try:
+            category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
+            for person_link in category_profiles:
+                test_profis.update(self.get_person_info(person_link))
+                counter+=1
+        except:
+            self.logger.critical("Problems with Internet connection or Web driver occured!")
+            self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
         self.write_json_backup("hindi", test_profis)
         database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
