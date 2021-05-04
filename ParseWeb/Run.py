@@ -1,7 +1,7 @@
 import logging
 from ParseWeb import ProfiParser
 
-if __name__ == '__main__':
+def main():
     # create logger
     logger = logging.getLogger("ParseWeb")
     logger.setLevel(logging.INFO)
@@ -10,8 +10,11 @@ if __name__ == '__main__':
     sh = logging.StreamHandler()
     sh.setFormatter(logging.Formatter(FORMAT))
     logger.addHandler(sh)
-    
+    # starting program
     logger.info("Strating servece...")
     Parser = ProfiParser()
     Parser.parse()
     logger.info("Stoping servece...")
+
+if __name__ == '__main__':
+    main()
