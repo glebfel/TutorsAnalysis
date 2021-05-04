@@ -1,4 +1,7 @@
 import pymysql
+import logging
+
+module_logger = logging.getLogger("ParseWeb.WriteToDatabase") 
 
 class WriteToDatabase():
     """Write JSON-file to database using MySQL"""
@@ -13,26 +16,28 @@ class WriteToDatabase():
         Parses config file disposed in same folder as this script
         and returns search url and database info.
         """
+        logger = logging.getLogger("ParseWeb.WriteToDatabase.read_config")
         try:
             with open(config_file, 'r') as f:
                 data = f.read().split('\n')
                 conf_info = {line.split(': ')[0]: line.split(': ')[1] for line in data if line != ''}
                 return conf_info
         except FileNotFoundError:
-            print(f'Config file {config_file} is not found!')
+            logger.critical(f'Config file {config_file} is not found!')
             return {}
 
     def create_base(self):
         """
         Creates database if it does not exists
         """
+        logger = logging.getLogger("ParseWeb.WriteToDatabase.create_base")
         base_connector = pymysql.connect(host=self.conf_info['host'],
                                             user=self.conf_info['login'],
                                             password=self.conf_info['password'])
         try:
             base_connector.cursor().execute(f"create database {self.conf_info['database']}")
         except pymysql.ProgrammingError:
-            print(f"Database with name {self.conf_info['database']} already exists")
+            logger.warning(f"Database with name {self.conf_info['database']} already exists")
             pass
         base_connector.close()
 
@@ -40,6 +45,7 @@ class WriteToDatabase():
         """
         Creates table for input category and writes data
         """
+        logger = logging.getLogger("ParseWeb.WriteToDatabase.create_and_write_table")
         base_connector = pymysql.connect(host=self.conf_info['host'],
                                          database=self.conf_info['database'],
                                          user=self.conf_info['login'],
@@ -51,7 +57,7 @@ class WriteToDatabase():
                 if (key not in columns and len(columns) <= 500):
                     columns.append(key)
         # Create table and insert columns
-        print(f"--Start writing table for {table_name}")
+        logger.info(f"Start writing table for {table_name}...")
         column_insert = " TEXT, ".join([f"`{column}`" for column in columns])
         query_text = f'create table `{table_name}` ({column_insert} TEXT)'
         base_connector.cursor().execute(query_text)
@@ -65,6 +71,6 @@ class WriteToDatabase():
             base_connector.cursor().execute(person_query)
             base_connector.commit()
         base_connector.cursor().close()
-        print(f"--End of writing table for {table_name}")
+        logger.info(f"End of writing table for {table_name}...")
 
 

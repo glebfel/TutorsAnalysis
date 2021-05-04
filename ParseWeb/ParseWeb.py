@@ -2,7 +2,7 @@ import re
 import os
 import json
 import string
-from time import sleep
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from WriteToDatabase import WriteToDatabase
 
+module_logger = logging.getLogger("ParseWeb.ParseWeb")
 
 class ProfiParser():
 
@@ -42,7 +43,9 @@ class ProfiParser():
         """
         Gets categories and their links for later parsing
         """
-        print("--Gathering category list")
+        logger = logging.getLogger("ParseWeb.ParseWeb.get_cat_links")
+        logger.info("Gathering category list...")
+
         category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
         self.driver.get(self.MAIN_URL)
         categories = self.driver.find_elements_by_class_name("services-catalog__content")
@@ -62,13 +65,14 @@ class ProfiParser():
                 self.others_links[-1].append(elem.text)
         # Move english category to the end because it is the largest one
         self.link_list.append(self.link_list.pop(self.link_list.index('https://profi.ru/repetitor/english/')))
-        print(f'--Found {len(self.link_list) + len(self.others_links)} categories')
+        logger.info(f'--Found {len(self.link_list) + len(self.others_links)} categories')
 
 
     def get_person_info(self, link: str) -> dict:
         """
         Parses person by link and returns dictionary with reviews, education info, tution experience, prices, etc.
         """
+        logger = logging.getLogger("ParseWeb.ParseWeb.get_person_info")
         self.driver.get(link)
         person_info = {}
         # Get person name
@@ -89,21 +93,21 @@ class ProfiParser():
                 if(text.find("Репетиторский опыт") != -1 or text.find("Опыт репетиторства") != -1): 
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Репетиторский опыт"] =  years
+                        person_info["Репетиторский опыт (лет)"] =  years
                     else:
                         years = re.split(r"[(л–]", text)
-                        person_info["Репетиторский опыт"] =  years[1]
+                        person_info["Репетиторский опыт (лет)"] =  years[1]
                     break;
                 elif (text.find("Репетиторская деятельность") != -1):
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Репетиторский опыт"] =  years
+                        person_info["Репетиторский опыт (лет)"] =  years
                     else:
                         years = re.split(r"[(гл–]", text)
-                        person_info["Репетиторский опыт"] =  years[2]
+                        person_info["Репетиторский опыт (лет)"] =  years[2]
                     break;
         except Exception as e:
-            print(e)
+            log.exception(e)
         # Get working methods
         methods_block = self.driver.find_element_by_xpath("//div[@class='_3z3XSoj']")
 
@@ -153,6 +157,7 @@ class ProfiParser():
         """
         Gets list of repetitors (or other profi) by category link
         """
+        logger = logging.getLogger("ParseWeb.ParseWeb.get_profis_by_cat")
         self.driver.get(cat_link)
         # waiting for button to upload
         button = WebDriverWait(self.driver, 10).until(
@@ -164,7 +169,7 @@ class ProfiParser():
                 button = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, '//a[@data-shmid="pagination_next"]')))
             except:
-                print("End of category")
+                logger.info("End of category")
                 button = False
         profiles = self.driver.find_elements_by_xpath('//a[@data-shmid="desktop-profile__avatar"]')
         profiles_links = [person.get_attribute("href") for person in profiles]
@@ -174,6 +179,7 @@ class ProfiParser():
         """
         Parse all categories in JSON-files and MySQL database tables
         """
+        logger = logging.getLogger("ParseWeb.ParseWeb.parse")
         database = WriteToDatabase()
         database.create_base()
         self.driver = webdriver.Chrome()
@@ -182,7 +188,11 @@ class ProfiParser():
         # Treat general categories
         for category in self.link_list:
             cat_name = category.split('/')[-2]
-            print(f'--Treating {cat_name} category')
+            # check if categroy is already parsed
+            if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
+                logger.warning(f'{cat_name} category is already parsed!')
+                continue
+            logger.info(f'Treating {cat_name} category')
             category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
             self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in category_profiles]
             self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
@@ -190,7 +200,7 @@ class ProfiParser():
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
-            print(f'--Treating {cat_name} category')
+            logger.info(f'Treating {cat_name} category')
             for category in cat_list[1:]:
                 category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
                 self.cat_profiles_dict[cat_name] = [self.get_person_info(person_link) for person_link in
@@ -200,7 +210,8 @@ class ProfiParser():
         self.driver.quit()
 
     def test(self):
-        print("--This is a test run for only hindi category")
+        logger = logging.getLogger("ParseWeb.ParseWeb.test")
+        logger.info("This is a test run for only hindi category")
         database = WriteToDatabase()
         database.create_base()
         self.driver = webdriver.Chrome()
