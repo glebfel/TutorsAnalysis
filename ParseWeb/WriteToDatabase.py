@@ -52,16 +52,16 @@ class WriteToDatabase():
                     columns.append(key)
         # Create table and insert columns
         print(f"--Start writing table for {table_name}")
-        column_insert = " TEXT, ".join([f"{column}" for column in columns])
-        query_text = f'create table {table_name} ({column_insert} TEXT)'
+        column_insert = " TEXT, ".join([f"`{column}`" for column in columns])
+        query_text = f'create table `{table_name}` ({column_insert} TEXT)'
         base_connector.cursor().execute(query_text)
         # Insert every person
         for person in profi_data:
             person_columns = list(person.keys())
-            person_column_insert = ", ".join([f"{column}" for column in person_columns])
+            person_column_insert = ", ".join([f"`{column}`" for column in person_columns])
             person_values = list(person.values())
             person_values_insert = ", ".join([f"'{column}'" for column in person_values])
-            person_query = f"insert into {table_name} ({person_column_insert}) values ({person_values_insert})"
+            person_query = f"insert into `{table_name}` ({person_column_insert}) values ({person_values_insert})"
             base_connector.cursor().execute(person_query)
             base_connector.commit()
         base_connector.cursor().close()

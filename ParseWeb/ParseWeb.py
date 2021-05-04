@@ -15,7 +15,7 @@ class ProfiParser():
 
     MAIN_URL = "https://profi.ru/services/repetitor/"
     profile_suffix = r'?seamless=1&tabName=PROFILES'
-    rate_list = ['FiveRate', 'FourRate', 'ThreeRate', 'TwoRate', 'OneRate']
+    rate_list = ['Оценка 5', 'Оценка 4', 'Оценка 3', 'Оценка 2', 'Оценка 1']
     other_links_dict = {'Другие языки': 'languages',
                         'Интеллектуальные игры': 'int_games',
                         'Подготовка к экзаменам': 'exams'}
@@ -80,7 +80,7 @@ class ProfiParser():
                 div_blocks = personal_block.find_elements_by_tag_name('div')
                 # удаление лишних элементов из текста
                 final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
-                person_info["Education"] =  final_info[0]
+                person_info["Образование"] =  final_info[0]
         # Get tution experience
             personal_block = personal_block.find_elements_by_tag_name('div')
             for block in enumerate(personal_block):
@@ -89,18 +89,18 @@ class ProfiParser():
                 if(text.find("Репетиторский опыт") != -1 or text.find("Опыт репетиторства") != -1): 
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Experience"] =  years
+                        person_info["Репетиторский опыт"] =  years
                     else:
                         years = re.split(r"[(л–]", text)
-                        person_info["Experience"] =  years[1]
+                        person_info["Репетиторский опыт"] =  years[1]
                     break;
                 elif (text.find("Репетиторская деятельность") != -1):
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Experience"] =  years
+                        person_info["Репетиторский опыт"] =  years
                     else:
                         years = re.split(r"[(гл–]", text)
-                        person_info["Experience"] =  years[2]
+                        person_info["Репетиторский опыт"] =  years[2]
                     break;
         except Exception as e:
             print(e)
@@ -108,27 +108,27 @@ class ProfiParser():
         methods_block = self.driver.find_element_by_xpath("//div[@class='_3z3XSoj']")
 
         if(methods_block.text.find("Работает дистанционно") != -1):
-            person_info["Remote_work"] =  "+"
+            person_info["Работает дистанционно"] =  "+"
         else:
-            person_info["Remote_work"] =  "-"
+            person_info["Работает дистанционно"] =  "-"
         if(methods_block.text.find("Принимает у себя") != -1):
-            person_info["Hosts_work"] =  "+"
+            person_info["Принимает у себя"] =  "+"
         else:
-            person_info["Hosts_work"] =  "-"
+            person_info["Принимает у себя"] =  "-"
         if(methods_block.text.find("Выезд к клиенту") != -1):
-            person_info["Departure_to_the_client"] =  "+"
+            person_info["Выезд к клиенту"] =  "+"
         else:
-            person_info["Departure_to_the_client"] =  "-"
+            person_info["Выезд к клиенту"] =  "-"
         # Get reviews
         reviews_block = self.driver.find_element_by_xpath('//div[@data-shmid="ProfileTabsBlock_bar"]')
         reviews = reviews_block.find_elements_by_tag_name('span')
-        person_info["CountRates"] = int(reviews[0].text)
-        if person_info["CountRates"] == 0:
-            person_info["TotalRate"] = 0
+        person_info["Количество оценок"] = int(reviews[0].text)
+        if person_info["Количество оценок"] == 0:
+            person_info["Средняя оценка"] = 0
             for i, rate in enumerate(self.rate_list):
                 person_info[self.rate_list[i]] = 0
         else:
-            person_info["TotalRate"] = float(reviews[1].text.replace(',', '.'))
+            person_info["Средняя оценка"] = float(reviews[1].text.replace(',', '.'))
             reviews_rates = self.driver.find_element_by_xpath('//div[@data-shmid="ReviewHistogramComponent"]')
             reviews_rates = reviews_rates.find_element_by_xpath('//div[@class="_2ZifqNc"]') \
                 .find_elements_by_tag_name('div')
@@ -144,7 +144,7 @@ class ProfiParser():
         for price in prices:
             columns = price.find_elements_by_tag_name('td')
             if columns[0].text:
-                subj = re.sub(r" |-|\W", "_", columns[0].text.split("\n")[0]).strip(".")
+                subj = columns[0].text.split("\n")[0].strip(".")
                 price = columns[1].text.split(" ₽ / ")[0]
                 person_info[subj] = price
         return person_info
@@ -205,7 +205,7 @@ class ProfiParser():
         database.create_base()
         self.driver = webdriver.Chrome()
         category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-        test_profis = [self.get_person_info(person_link) for person_link in category_profiles]
+        test_profis = [self.get_person_info(person_link) for person_link in category_profiles[:2]]
         self.write_json_backup("hindi", test_profis)
         database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
