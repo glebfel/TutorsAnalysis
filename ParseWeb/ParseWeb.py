@@ -205,6 +205,8 @@ class ProfiParser():
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
+            self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
@@ -225,8 +227,8 @@ class ProfiParser():
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
-        self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
-        database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+            self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
 
     def test(self):
@@ -238,6 +240,7 @@ class ProfiParser():
         test_profis = {}
         try:
             category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
+            self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
                 test_profis.update(self.get_person_info(person_link))
                 counter+=1
