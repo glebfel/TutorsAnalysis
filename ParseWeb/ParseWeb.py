@@ -188,7 +188,7 @@ class ProfiParser():
         # Treat general categories
         for category in self.link_list:
             cat_name = category.split('/')[-2]
-            # Check if categroy is already parsed
+            # Check if category is already parsed
             if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
                 self.logger.warning(f'{cat_name} category is already parsed!')
                 continue
@@ -205,7 +205,9 @@ class ProfiParser():
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
+            self.logger.info(f'{cat_name} category was parsed successfully!')
             self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         # Treat generic categories
         for cat_list in self.others_links:
@@ -227,7 +229,9 @@ class ProfiParser():
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of {cat_name} category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
+            self.logger.info(f'{cat_name} category was parsed successfully!')
             self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
 
