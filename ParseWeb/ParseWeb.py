@@ -45,7 +45,7 @@ class ProfiParser():
         for person in profi_data:
             new_person = {}
             for pair in person.items():
-                if(pair[0] in columns):
+                if((pair[0] in columns) and len(pair[0]) < 64):
                     new_person.update({pair[0] : pair[1]})
             person = new_person
 
