@@ -68,7 +68,7 @@ class WriteToDatabase():
             person_columns = list(person.keys())
             person_column_insert = ", ".join([f"`{column}`" for column in person_columns if column in columns])
             person_pairs = list(person.items())
-            person_values_insert = ", ".join([f"'{pair[1]}'" for pair in person_pairs if pair[0] in columns])
+            person_values_insert = ", ".join([f"{base_connector.escape(pair[1])}" for pair in person_pairs if pair[0] in columns])
             person_query = f"insert into `{table_name}` ({person_column_insert}) values ({person_values_insert})"
             base_connector.cursor().execute(person_query)
             base_connector.commit()

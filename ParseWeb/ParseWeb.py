@@ -252,7 +252,7 @@ class ProfiParser():
             category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                if(counter>2):
+                if(counter>5):
                     break;
                 test_profis.append(self.get_person_info(person_link))
                 counter+=1
