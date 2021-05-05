@@ -30,7 +30,7 @@ class ProfiParser():
         self.cat_profiles_dict = {}
         self.logger = logging.getLogger("ParseWeb.ParseWeb.ProfiParser")
 
-    def write_json_backup(self, cat_name: str, data: list):
+    def write_json_file(self, cat_name: str, data: list):
         """
         Prepares backup for parsed data
         """
@@ -70,7 +70,6 @@ class ProfiParser():
         self.link_list.append(self.link_list.pop(self.link_list.index('https://profi.ru/repetitor/english/')))
         self.logger.info(f'Found {len(self.link_list) + len(self.others_links)} categories')
 
-
     def get_person_info(self, link: str) -> dict:
         """
         Parses person by link and returns dictionary with reviews, education info, tution experience, prices, etc.
@@ -80,36 +79,38 @@ class ProfiParser():
         # Get person name
         person_info["Fullname"] = self.driver.find_element_by_xpath('//h1[@data-shmid="profilePrepName"]').text
         # Get education info
-        try:
-            personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
-            if(personal_block.text.find("Образование") != -1):
-                div_blocks = personal_block.find_elements_by_tag_name('div')
-                # удаление лишних элементов из текста
-                final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
-                person_info["Образование"] =  final_info[0]
+        personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
+        if(personal_block.text.find("Образование") != -1):
+            div_blocks = personal_block.find_elements_by_tag_name('div')
+            # удаление лишних элементов из текста
+            final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
+            person_info["Образование"] =  final_info[0]
+            if(len(final_info[0])<3):
+                person_info["Образование"] = ""
         # Get tution experience
-            personal_block = personal_block.find_elements_by_tag_name('div')
-            for block in enumerate(personal_block):
-                text = block[1].text
-                index = text.find('(')
+        personal_block = personal_block.find_elements_by_tag_name('div')
+        for block in enumerate(personal_block):
+            text = block[1].text
+            index = text.find('(')
+            try:
                 if(text.find("Репетиторский опыт") != -1 or text.find("Опыт репетиторства") != -1): 
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Репетиторский опыт (лет)"] =  years
+                        person_info["Репетиторский опыт (лет)"] =  int(years)
                     else:
-                        years = re.split(r"[(л–]", text)
-                        person_info["Репетиторский опыт (лет)"] =  years[1]
+                        years = re.split(r"[(гл–]", text)
+                        person_info["Репетиторский опыт (лет)"] =  int(years[1])
                     break;
                 elif (text.find("Репетиторская деятельность") != -1):
                     if(index != -1):
                         years = text[index+1:index+3]
-                        person_info["Репетиторский опыт (лет)"] =  years
+                        person_info["Репетиторский опыт (лет)"] =  int(years)
                     else:
                         years = re.split(r"[(гл–]", text)
-                        person_info["Репетиторский опыт (лет)"] =  years[2]
+                        person_info["Репетиторский опыт (лет)"] =  int(years[2])
                     break;
-        except Exception as e:
-            self.log.exception(e)
+            except:
+                pass
         # Get working methods
         methods_block = self.driver.find_element_by_xpath("//div[@class='_3z3XSoj']")
 
@@ -150,8 +151,8 @@ class ProfiParser():
         for price in prices:
             columns = price.find_elements_by_tag_name('td')
             if columns[0].text:
-                subj = columns[0].text.split("\n")[0].strip(".")
-                price = columns[1].text.split(" ₽ / ")[0]
+                subj = columns[0].text.split("\n")[0].strip(".") + " (₽/60 мин.)"
+                price = columns[1].text.split("₽")[0]
                 person_info[subj] = price
         return person_info
 
@@ -182,7 +183,7 @@ class ProfiParser():
         """
         database = WriteToDatabase()
         database.create_base()
-        #supress Webdriver logging
+        # Start Webdriver with supressed logging
         options = webdriver.ChromeOptions() 
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         self.driver = webdriver.Chrome(options=options)
@@ -204,12 +205,20 @@ class ProfiParser():
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
+                    # print current state of the process
+                    percentage = (counter/len(category_profiles))*100
+                    if(percentage == 25):
+                        self.logger.info("25% of category was already parsed!")
+                    elif(percentage == 50):
+                        self.logger.info("50% of category was already parsed!")
+                    elif(percentage == 75):
+                        self.logger.info("75% of category was already parsed!")
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
-            self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         # Treat generic categories
@@ -228,12 +237,20 @@ class ProfiParser():
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
+                    # print current state of the process
+                    percentage = (counter/len(category_profiles))*100
+                    if(percentage == 25):
+                        self.logger.info("25% of category was already parsed!")
+                    elif(percentage == 50):
+                        self.logger.info("50% of category was already parsed!")
+                    elif(percentage == 75):
+                        self.logger.info("75% of category was already parsed!")
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
-            self.write_json_backup(cat_name, self.cat_profiles_dict[cat_name])
+            self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
         self.driver.quit()
@@ -242,7 +259,7 @@ class ProfiParser():
         self.logger.info("This is a test run for only hindi category")
         database = WriteToDatabase()
         database.create_base()
-        #supress Webdriver logging
+        # Start Webdriver with supressed logging
         options = webdriver.ChromeOptions() 
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         self.driver = webdriver.Chrome(options=options)
@@ -260,6 +277,6 @@ class ProfiParser():
         except:
             self.logger.critical("Problems with Internet connection or Web driver occured!")
             self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
-        self.write_json_backup("hindi", test_profis)
+        self.write_json_file("hindi", test_profis)
         database.create_and_write_table("hindi", test_profis)
         self.driver.quit()
