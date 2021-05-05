@@ -59,7 +59,7 @@ class WriteToDatabase():
                 if (key not in columns and len(columns) <= 500):
                     columns.append(key)
         # Create table and insert columns
-        self.logger.info(f"Start writing table for {table_name}...")
+        self.logger.info(f"Start writing table for '{table_name}' category...")
         column_insert = " TEXT, ".join([f"`{column}`" for column in columns])
         query_text = f'create table `{table_name}` ({column_insert} TEXT)'
         base_connector.cursor().execute(query_text)
@@ -73,6 +73,6 @@ class WriteToDatabase():
             base_connector.cursor().execute(person_query)
             base_connector.commit()
         base_connector.cursor().close()
-        self.logger.info(f"End of writing table for {table_name}...")
+        self.logger.info(f"End of writing table for '{table_name}' category...")
 
 
