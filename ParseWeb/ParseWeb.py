@@ -215,7 +215,7 @@ class ProfiParser():
             counter = 0
             person_info = []
             try:
-                category_profiles = self.get_profiles_by_cat(f'{category}{self.profile_suffix}')
+                category_profiles = self.get_profiles_by_category(f'{category}{self.profile_suffix}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
