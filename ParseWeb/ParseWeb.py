@@ -34,6 +34,20 @@ class ProfiParser():
         """
         Prepares backup for parsed data
         """
+        # restrain number of columns
+        columns = list(profi_data[0].keys())
+        for profi in profi_data[1:]:
+            for key in profi.keys():
+                # Create limit for the number of columns to avoid "too many columns exception" in db
+                if (key not in columns and len(columns) <= 500):
+                    columns.append(key)
+        for person in data:
+            new_person = {}
+            for pair in person.item:
+                if(pair[0] in columns):
+                    new_person.update(pair)
+            person = new_person
+
         if not os.path.isdir("json_data"):
             os.mkdir("json_data")
 
