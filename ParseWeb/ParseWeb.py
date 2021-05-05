@@ -55,7 +55,7 @@ class ProfiParser():
         with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
             json.dump(profi_data, write_file)
 
-    def get_cat_links(self):
+    def get_category_links(self):
         """
         Gets categories and their links for later parsing
         """
@@ -99,7 +99,7 @@ class ProfiParser():
             div_blocks = personal_block.find_elements_by_tag_name('div')
             # удаление лишних элементов из текста
             final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
-            final_info = final_info[0].replace(' ', '')  
+            final_info = final_info[0].strip(' ')
             if(len(final_info)>2):
                 person_info["Образование"] = final_info
         # Get tution experience
@@ -171,7 +171,7 @@ class ProfiParser():
                 person_info[subj] = price
         return person_info
 
-    def get_profis_by_cat(self, cat_link: str):
+    def get_profiles_by_category(self, cat_link: str):
         """
         Gets list of repetitors (or other profi) by category link
         """
@@ -203,7 +203,7 @@ class ProfiParser():
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         self.driver = webdriver.Chrome(options=options)
         # Get categories
-        self.get_cat_links()
+        self.get_category_links()
         # Treat general categories
         for category in self.link_list:
             cat_name = category.split('/')[-2]
@@ -215,7 +215,7 @@ class ProfiParser():
             counter = 0
             person_info = []
             try:
-                category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
+                category_profiles = self.get_profiles_by_cat(f'{category}{self.profile_suffix}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
@@ -247,7 +247,7 @@ class ProfiParser():
             counter = 0
             person_info = []
             try:
-                category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
+                category_profiles = self.get_profiles_by_category(f'{category}{self.profile_suffix}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
@@ -281,10 +281,10 @@ class ProfiParser():
         counter = 0
         test_profis = []
         try:
-            category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
+            category_profiles = self.get_profiles_by_category(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                if(counter>2):
+                if(counter>1):
                     break;
                 test_profis.append(self.get_person_info(person_link))
                 counter+=1
