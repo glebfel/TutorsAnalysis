@@ -2,6 +2,7 @@ import re
 import os
 import json
 import string
+import pymysql
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -30,7 +31,7 @@ class ProfiParser():
         self.cat_profiles_dict = {}
         self.logger = logging.getLogger("ParseWeb.ParseWeb.ProfiParser")
 
-    def write_json_file(self, cat_name: str, data: list):
+    def write_json_file(self, cat_name: str, profi_data: list):
         """
         Prepares backup for parsed data
         """
@@ -41,18 +42,18 @@ class ProfiParser():
                 # Create limit for the number of columns to avoid "too many columns exception" in db
                 if (key not in columns and len(columns) <= 500):
                     columns.append(key)
-        for person in data:
+        for person in profi_data:
             new_person = {}
-            for pair in person.item:
+            for pair in person.items():
                 if(pair[0] in columns):
-                    new_person.update(pair)
+                    new_person.update({pair[0] : pair[1]})
             person = new_person
 
         if not os.path.isdir("json_data"):
             os.mkdir("json_data")
 
         with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
-            json.dump(data, write_file)
+            json.dump(profi_data, write_file)
 
     def get_cat_links(self):
         """
@@ -234,7 +235,7 @@ class ProfiParser():
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
-            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+            database.create_and_write_table(f'json_data\{cat_name}_data_file.json')
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
@@ -266,7 +267,7 @@ class ProfiParser():
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
-            database.create_and_write_table(cat_name, self.cat_profiles_dict[cat_name])
+            database.create_and_write_table(f'json_data\{cat_name}_data_file.json')
         self.driver.quit()
 
     def test(self):
@@ -283,7 +284,7 @@ class ProfiParser():
             category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                if(counter>5):
+                if(counter>2):
                     break;
                 test_profis.append(self.get_person_info(person_link))
                 counter+=1
@@ -292,5 +293,5 @@ class ProfiParser():
             self.logger.critical("Problems with Internet connection or Web driver occured!")
             self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
         self.write_json_file("hindi", test_profis)
-        database.create_and_write_table("hindi", test_profis)
+        database.create_and_write_table("json_data\hindi_data_file.json")
         self.driver.quit()
