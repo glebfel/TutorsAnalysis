@@ -101,7 +101,7 @@ class ProfiParser():
             final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
             final_info = final_info[0].replace(' ', '')  
             if(len(final_info)>2):
-                person_info["Образование"] = final_info[0]
+                person_info["Образование"] = final_info
         # Get tution experience
         personal_block = personal_block.find_elements_by_tag_name('div')
         for block in enumerate(personal_block):
