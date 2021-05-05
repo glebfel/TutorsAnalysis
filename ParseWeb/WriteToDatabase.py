@@ -49,7 +49,7 @@ class WriteToDatabase():
                                          user=self.conf_info['login'],
                                          password=self.conf_info['password'])
         # Get list of columns for table
-            # Check if profi_data is empty
+        # Check if profi_data is empty
         if not profi_data:
             return
         columns = list(profi_data[0].keys())
@@ -63,17 +63,12 @@ class WriteToDatabase():
         column_insert = " TEXT, ".join([f"`{column}`" for column in columns])
         query_text = f'create table `{table_name}` ({column_insert} TEXT)'
         base_connector.cursor().execute(query_text)
-        # Clean profi_data from excess columns
-        clean_profi_data = {}
-        for pair in profi_data:
-            if(pair[0] in columns):
-                clean_profi_data.update(pair)
         # Insert every person
-        for person in clean_profi_data:
+        for person in profi_data:
             person_columns = list(person.keys())
-            person_column_insert = ", ".join([f"`{column}`" for column in person_columns])
-            person_values = list(person.values())
-            person_values_insert = ", ".join([f"'{column}'" for column in person_values])
+            person_column_insert = ", ".join([f"`{column}`" for column in person_columns if column in columns])
+            person_pairs = list(person.items())
+            person_values_insert = ", ".join([f"'{pair[1]}'" for pair in person_pairs if pair[0] in columns])
             person_query = f"insert into `{table_name}` ({person_column_insert}) values ({person_values_insert})"
             base_connector.cursor().execute(person_query)
             base_connector.commit()

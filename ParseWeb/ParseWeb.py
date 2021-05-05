@@ -197,12 +197,12 @@ class ProfiParser():
                 continue
             self.logger.info(f"Treating '{cat_name}' category")
             counter = 0
-            person_info = {}
+            person_info = []
             try:
                 category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
-                    person_info.update(self.get_person_info(person_link))
+                    person_info.append(self.get_person_info(person_link))
                     counter+=1
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
@@ -221,12 +221,12 @@ class ProfiParser():
                 continue
             self.logger.info(f"Treating '{cat_name}' category")
             counter = 0
-            person_info = {}
+            person_info = []
             try:
                 category_profiles = self.get_profis_by_cat(f'{category}{self.profile_suffix}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
-                    person_info.update(self.get_person_info(person_link))
+                    person_info.append(self.get_person_info(person_link))
                     counter+=1
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
@@ -242,15 +242,21 @@ class ProfiParser():
         self.logger.info("This is a test run for only hindi category")
         database = WriteToDatabase()
         database.create_base()
-        self.driver = webdriver.Chrome()
+        #supress Webdriver logging
+        options = webdriver.ChromeOptions() 
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.driver = webdriver.Chrome(options=options)
         counter = 0
-        test_profis = {}
+        test_profis = []
         try:
             category_profiles = self.get_profis_by_cat(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                test_profis.update(self.get_person_info(person_link))
+                if(counter>2):
+                    break;
+                test_profis.append(self.get_person_info(person_link))
                 counter+=1
+                
         except:
             self.logger.critical("Problems with Internet connection or Web driver occured!")
             self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
