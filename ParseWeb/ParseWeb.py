@@ -42,18 +42,19 @@ class ProfiParser():
                 # Create limit for the number of columns to avoid "too many columns exception" in db
                 if (key not in columns and len(columns) <= 500):
                     columns.append(key)
+        updated_profi_data = []
         for person in profi_data:
             new_person = {}
             for pair in person.items():
-                if((pair[0] in columns) and len(pair[0]) < 64):
+                if(pair[0] in columns and len(pair[0]) < 64):
                     new_person.update({pair[0] : pair[1]})
-            person = new_person
+            updated_profi_data.append(new_person)
 
         if not os.path.isdir("json_data"):
             os.mkdir("json_data")
 
         with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
-            json.dump(profi_data, write_file)
+            json.dump(updated_profi_data, write_file)
 
     def get_category_links(self):
         """
@@ -96,12 +97,14 @@ class ProfiParser():
         # Get education info
         personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
         if(personal_block.text.find("Образование") != -1):
-            div_blocks = personal_block.find_elements_by_tag_name('div')
-            # удаление лишних элементов из текста
-            final_info = re.split(r"[,;1234567890()]", div_blocks[0].text)
-            final_info = final_info[0].strip(' ')
-            if(len(final_info)>2):
-                person_info["Образование"] = final_info
+            try:
+                edu = self.driver.find_element_by_xpath("//div[@class='ui-text _3fhTO7m _3xKhc83 _2iyzK60 _1A6uUTD']")
+                # Удаление лишних элементов 
+                waste = self.driver.find_element_by_xpath("//span[@class='ui-text _TE8l15y _3xKhc83 _38NyyC- _32776-7']")
+                edu = edu.text.replace(waste.text, '')
+                person_info["Образование"] = re.split(r"[,;]", edu)[0]
+            except:
+                pass
         # Get tution experience
         personal_block = personal_block.find_elements_by_tag_name('div')
         for block in enumerate(personal_block):
@@ -284,7 +287,7 @@ class ProfiParser():
             category_profiles = self.get_profiles_by_category(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                if(counter>1):
+                if(counter>30):
                     break;
                 test_profis.append(self.get_person_info(person_link))
                 counter+=1
