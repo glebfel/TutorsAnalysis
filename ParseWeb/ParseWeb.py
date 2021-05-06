@@ -153,12 +153,16 @@ class ProfiParser():
             for i, rate in enumerate(self.rate_list):
                 person_info[self.rate_list[i]] = 0
         else:
-            person_info["Средняя оценка"] = float(reviews[1].text.replace(',', '.'))
-            reviews_rates = self.driver.find_element_by_xpath('//div[@data-shmid="ReviewHistogramComponent"]')
-            reviews_rates = reviews_rates.find_element_by_xpath('//div[@class="_2ZifqNc"]') \
-                .find_elements_by_tag_name('div')
-            for i, review in enumerate(reviews_rates):
-                person_info[self.rate_list[i]] = int(review.text)
+            try:
+                person_info["Средняя оценка"] = float(reviews[1].text.replace(',', '.'))
+                reviews_rates = self.driver.find_element_by_xpath('//div[@data-shmid="ReviewHistogramComponent"]')
+                reviews_rates = reviews_rates.find_element_by_xpath('//div[@class="_2ZifqNc"]') \
+                    .find_elements_by_tag_name('div')
+                for i, review in enumerate(reviews_rates):
+                    person_info[self.rate_list[i]] = int(review.text)
+            except:
+                pass
+
         # Get all services and prices
         try:
             price_button = self.driver.find_element_by_xpath('//a[@data-shmid="pricesMore"]')
