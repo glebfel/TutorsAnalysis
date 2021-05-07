@@ -395,13 +395,11 @@ class RepetitRuParser():
         for j, ser in enumerate(services):
             name = names[j].text
             prices = ser.find_elements_by_xpath("//div[@class='col price']")
-            for i in range(len(prices)):
-                if(i > 2):
-                    break
+            for i in range(j*3, (j+1)*3):
                 price = re.sub(r"[― ]", "", prices[i].text)
                 if(len(price)>0):
                     price = int(re.split(r"[тр]", price)[1])      
-                person_info[f"{name} {suffix[i]}"] = price
+                person_info[f"{name} {suffix[i%3]}"] = price
         return person_info
 
     def write_json_file(self, cat_name: str, profi_data: list):
