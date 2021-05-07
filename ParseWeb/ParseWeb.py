@@ -383,12 +383,12 @@ class RepetitRuParser():
         person_info["Отрицательных отзывов"] = bad_revs
         # Get all services and prices
         services = self.driver.find_element_by_xpath("//div[@class='subjects in-nav']")
-        if("60 мин" in services.text):
-            mins = "60 мин"
-        elif ("90 мин" in services.text):
+        if ("90 мин" in services.text):
             mins = "90 мин"
         elif ("45 мин" in services.text):
             mins = "45 мин"
+        else:
+            mins = "60 мин"
         services = services.find_elements_by_xpath("//div[@class='subject-header row']")
         names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
         suffix = [f"У РЕПЕТИТОРА (₽/{mins})", f"У УЧЕНИКА (₽/{mins})", f"ДИСТАНЦИОННО (₽/{mins})"]
