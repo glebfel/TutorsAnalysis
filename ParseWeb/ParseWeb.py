@@ -97,7 +97,7 @@ class ProfiParser():
         person_info["ФИО"] = self.driver.find_element_by_xpath('//h1[@data-shmid="profilePrepName"]').text
         # Get education info
         personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
-        if(personal_block.text.find("Образование") != -1):
+        if("Образование" in personal_block.text):
             try:
                 edu = self.driver.find_element_by_xpath("//div[@class='ui-text _3fhTO7m _3xKhc83 _2iyzK60 _1A6uUTD']")
                 # Удаление лишних элементов 
@@ -112,7 +112,7 @@ class ProfiParser():
             text = block[1].text
             index = text.find('(')
             try:
-                if(text.find("Репетиторский опыт") != -1 or text.find("Опыт репетиторства") != -1): 
+                if(("Репетиторский опыт" in text) or ("Опыт репетиторства" in text)): 
                     if(index != -1):
                         years = text[index+1:index+3]
                         person_info["Репетиторский опыт (лет)"] =  int(years)
@@ -132,19 +132,12 @@ class ProfiParser():
                 pass
         # Get working methods
         methods_block = self.driver.find_element_by_xpath("//div[@class='_3z3XSoj']")
-
-        if(methods_block.text.find("Работает дистанционно") != -1):
+        if("Работает дистанционно" in methods_block.text):
             person_info["Работает дистанционно"] =  "+"
-        else:
-            person_info["Работает дистанционно"] =  "-"
-        if(methods_block.text.find("Принимает у себя") != -1):
+        if("Принимает у себя" in methods_block.text):
             person_info["Принимает у себя"] =  "+"
-        else:
-            person_info["Принимает у себя"] =  "-"
-        if(methods_block.text.find("Выезд к клиенту") != -1):
+        if("Выезд к клиенту" methods_block.text):
             person_info["Выезд к клиенту"] =  "+"
-        else:
-            person_info["Выезд к клиенту"] =  "-"
         # Get reviews
         reviews_block = self.driver.find_element_by_xpath('//div[@data-shmid="ProfileTabsBlock_bar"]')
         reviews = reviews_block.find_elements_by_tag_name('span')
@@ -375,7 +368,7 @@ class RepetitRuParser():
         bad_revs = self.driver.find_elements_by_xpath("//span[@class='review-type bad']")
         person_info["Положительных отзывов"] = len(good_revs)
         person_info["Отрицательных отзывов"] = len(bad_revs)
-        # Get all services and prices
+        # Get all services and prices and methods of works
         services = self.driver.find_element_by_xpath("//div[@class='subjects in-nav']")
         if ("90 мин" in services.text):
             mins = "90 мин"
@@ -386,13 +379,16 @@ class RepetitRuParser():
         services = services.find_elements_by_xpath("//div[@class='subject-header row']")
         names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
         suffix = [f"У РЕПЕТИТОРА (₽/{mins})", f"У УЧЕНИКА (₽/{mins})", f"ДИСТАНЦИОННО (₽/{mins})"]
+        # Initialize methods of work
+        methods = [person_info["Работает дистанционно"], person_info["Принимает у себя"], person_info["Выезд к клиенту"]]
         for j, ser in enumerate(services):
             name = names[j].text
             prices = ser.find_elements_by_xpath("//div[@class='col price']")
             for i in range(j*3, (j+1)*3):
                 price = re.sub(r"[― ]", "", prices[i].text)
                 if(len(price)>0):
-                    price = int(re.split(r"[тр]", price)[1])      
+                    price = int(re.split(r"[тр]", price)[1]) 
+                    methods[i%3] = "+"
                 person_info[f"{name} {suffix[i%3]}"] = price
         return person_info
 
