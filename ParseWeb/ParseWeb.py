@@ -286,20 +286,14 @@ class ProfiParser():
         options = webdriver.ChromeOptions() 
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
         self.driver = webdriver.Chrome(options=options)
-        counter = 0
         test_profis = []
         try:
             category_profiles = self.get_profiles_by_category(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
             self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
-                if(counter>30):
-                    break;
-                test_profis.append(self.get_person_info(person_link))
-                counter+=1
-                
+                test_profis.append(self.get_person_info(person_link))             
         except:
             self.logger.critical("Problems with Internet connection or Web driver occured!")
-            self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
         self.write_json_file("hindi", test_profis)
         database.create_and_write_table("json_data\hindi_data_file.json")
         self.driver.quit()
@@ -400,9 +394,9 @@ class RepetitRuParser():
         for i, ser in enumerate(services):
             name = names[i].text
             prices = ser.find_elements_by_xpath("//div[@class='col price']")
-            price1 = prices[0].text.replace("―", "")
-            price2 = prices[1].text.replace("―", "")
-            price3 = prices[2].text.replace("―", "")
+            price1 = int(re.split(r"[тр]", prices[0].text.replace("―", ""))[1]) 
+            price2 = int(re.split(r"[тр]", prices[1].text.replace("―", ""))[1]) 
+            price3 = int(re.split(r"[тр]", prices[2].text.replace("―", ""))[1]) 
             person_info[f"{name} У РЕПЕТИТОРА (₽/{mins})"] = price1
             person_info[f"{name} У УЧЕНИКА (₽/{mins})"] = price2
             person_info[f"{name} У ДИСТАНЦИОННО (₽/{mins})"] = price3
@@ -473,4 +467,29 @@ class RepetitRuParser():
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(f'repetit_ru_json_data\{cat_name}_data_file.json')
+        self.driver.quit()
+
+    def test(self):
+        self.logger.info("This is a test run for only yaponskiy-yazyk category")
+        database = WriteToDatabase('config_repetit_ru.conf')
+        database.create_base()
+        # Start Webdriver with supressed logging
+        options = webdriver.ChromeOptions() 
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.driver = webdriver.Chrome(options=options)
+        counter = 0
+        test_profis = []
+        try:
+            category_profiles = self.get_profiles_by_category(f'https://repetit.ru/repetitors/yaponskiy-yazyk/')
+            self.logger.info(f'Found {len(category_profiles)} profiles in yaponskiy-yazyk category')
+            for person_link in category_profiles:
+                if(counter>30):
+                    break;
+                test_profis.append(self.get_person_info(person_link))
+                counter+=1
+        except:
+            self.logger.critical("Problems with Internet connection or Web driver occured!")
+            self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
+        self.write_json_file("yaponskiy-yazyk", test_profis)
+        database.create_and_write_table("repetit_ru_json_data\yaponskiy-yazyk_data_file.json")
         self.driver.quit()

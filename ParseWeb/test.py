@@ -1,9 +1,9 @@
 import logging
 from ParseWeb import ProfiParser
-
 from ParseWeb import RepetitRuParser
+
 def main():
-    # create logger
+# create logger
     logger = logging.getLogger("ParseWeb")
     logger.setLevel(logging.INFO)
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -13,9 +13,14 @@ def main():
     logger.addHandler(sh)
     # starting program
     logger.info("Strating servece...")
-    Parser1 = ProfiParser()
-    Parser2 = RepetitRuParser()
-    Parser2.test()
+    print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
+    press = input()
+    if (press == '1'):
+        Parser = ProfiParser()
+        Parser.test()
+    else:
+        Parser = RepetitRuParser()
+        Parser.test()
     logger.info("Stoping servece...")
 
 if __name__ == '__main__':

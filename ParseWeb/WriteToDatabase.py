@@ -63,7 +63,7 @@ class WriteToDatabase():
                 if (key not in columns):
                     columns.append(key)
         # Create table name
-        table_name = file_name.split('_')[1]
+        table_name = file_name.split('_')[3]
         table_name = table_name.split('\\')[1]
         # Create table and insert columns
         self.logger.info(f"Start writing table for '{table_name}' category...")
