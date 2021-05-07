@@ -52,7 +52,7 @@ class RepetitRuParser():
         profiles_links = []
         page_suffix = "?page="
         number = int(re.split(r"[ор]", self.driver.find_element_by_id('ctl00_ContentPlaceHolder1_SearchResultsNewControl_hResultsCount').text)[1])//10
-        for page in range(1, number + 1):
+        for page in range(2, number + 1):
             profiles = self.driver.find_elements_by_class_name("teachers")
             profiles = profiles[0].find_elements_by_class_name("teacher-name")
             for person in profiles:
