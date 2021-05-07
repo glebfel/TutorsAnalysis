@@ -12,6 +12,7 @@ def main():
     sh.setFormatter(logging.Formatter(FORMAT))
     logger.addHandler(sh)
     # starting program
+    print("***********TEST configuration***********\n")
     logger.info("Strating servece...")
     print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
     press = input()

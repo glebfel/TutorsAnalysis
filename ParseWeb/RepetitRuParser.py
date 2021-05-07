@@ -98,15 +98,16 @@ class RepetitRuParser():
         names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
         suffix = [f"У РЕПЕТИТОРА (₽/{mins})", f"У УЧЕНИКА (₽/{mins})", f"ДИСТАНЦИОННО (₽/{mins})"]
         # Initialize methods of work
-        methods = [person_info["Работает дистанционно"], person_info["Принимает у себя"], person_info["Выезд к клиенту"]]
+        methods = {"Работает дистанционно" : "", "Принимает у себя": "", "Выезд к клиенту" : ""}
         for j, ser in enumerate(services):
             name = names[j].text
             prices = ser.find_elements_by_xpath("//div[@class='col price']")
             for i in range(j*3, (j+1)*3):
                 price = re.sub(r"[― ]", "", prices[i].text)
                 if(len(price)>0):
-                    price = int(re.split(r"[тр]", price)[1]) 
-                    methods[i%3] = "+"
+                    price = int(re.split(r"[тр]", price)[1])
+                    methods[list(methods.keys())[i%3]] = "+"
+                person_info.update(methods)
                 person_info[f"{name} {suffix[i%3]}"] = price
         return person_info
 
