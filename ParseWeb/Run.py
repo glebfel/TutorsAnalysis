@@ -1,5 +1,6 @@
 import logging
 from ParseWeb import ProfiParser
+from ParseWeb import RepetitRuParser
 
 def main():
     # create logger
@@ -12,8 +13,14 @@ def main():
     logger.addHandler(sh)
     # starting program
     logger.info("Strating servece...")
-    Parser = ProfiParser()
-    Parser.parse()
+    print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
+    press = input()
+    if (press == 'p'):
+        Parser = ProfiParser()
+        Parser.parse()
+    else:
+        Parser = RepetitRuParser()
+        Parser.parse()
     logger.info("Stoping servece...")
 
 if __name__ == '__main__':

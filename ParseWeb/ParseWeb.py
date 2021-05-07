@@ -2,6 +2,7 @@ import re
 import os
 import json
 import string
+import time
 import pymysql
 import logging
 from selenium import webdriver
@@ -50,17 +51,17 @@ class ProfiParser():
                     new_person.update({pair[0] : pair[1]})
             updated_profi_data.append(new_person)
 
-        if not os.path.isdir("json_data"):
-            os.mkdir("json_data")
+        if not os.path.isdir("profi_ru_json_data"):
+            os.mkdir("profi_ru_json_data")
 
-        with open(f"json_data\{cat_name}_data_file.json", "w") as write_file:
+        with open(f"profi_ru_json_data\{cat_name}_data_file.json", "w") as write_file:
             json.dump(updated_profi_data, write_file)
 
     def get_category_links(self):
         """
         Gets categories and their links for later parsing
         """
-        self.logger.info("Gathering category list...")
+        self.logger.info("Gathering categories links...")
         try:
             category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
             self.driver.get(self.MAIN_URL)
@@ -93,7 +94,7 @@ class ProfiParser():
         self.driver.get(link)
         person_info = {}
         # Get person name
-        person_info["Fullname"] = self.driver.find_element_by_xpath('//h1[@data-shmid="profilePrepName"]').text
+        person_info["ФИО"] = self.driver.find_element_by_xpath('//h1[@data-shmid="profilePrepName"]').text
         # Get education info
         personal_block = self.driver.find_element_by_xpath("//div[@class='_2iQ3do3']")
         if(personal_block.text.find("Образование") != -1):
@@ -203,7 +204,7 @@ class ProfiParser():
         """
         Parse all categories in JSON-files and MySQL database tables
         """
-        database = WriteToDatabase()
+        database = WriteToDatabase("config_profi_ru.conf")
         database.create_base()
         # Start Webdriver with supressed logging
         options = webdriver.ChromeOptions() 
@@ -301,4 +302,175 @@ class ProfiParser():
             self.logger.exception(f"Only {counter} profiles of hindi category were parsed")
         self.write_json_file("hindi", test_profis)
         database.create_and_write_table("json_data\hindi_data_file.json")
+        self.driver.quit()
+
+
+
+
+
+class RepetitRuParser():
+
+    MAIN_URL = "https://repetit.ru/repetitors/"
+
+    def __init__(self):
+        """
+        Class constructor
+        """
+        self.link_list = []
+        self.cat_profiles_dict = {}
+        self.logger = logging.getLogger("ParseWeb.ParseWeb.RepetitRuParser")
+
+    def get_category_links(self):
+        """
+        Gets categories and their links for later parsing
+        """
+        self.logger.info("Gathering categories links...")
+        try:
+            self.driver.get(self.MAIN_URL)
+            menu = self.driver.find_elements_by_class_name("dropdown-menu")
+            categories = menu[0].find_elements_by_tag_name("a")
+        except:
+            self.logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
+            return
+        # Gather link_list
+        for cat in categories:
+            link = cat.get_attribute("href")
+            if("#" not in link):
+               self.link_list.append(link)
+        self.logger.info(f'Found {len(self.link_list)} categories!')
+
+    def get_profiles_by_category(self, cat_link: str):
+        """
+        Gets list of repetitors (or other profi) by category link
+        """
+        self.driver.get(cat_link)
+        profiles_links = []
+        page_suffix = "?page="
+        number = int(re.split(r"[ор]", self.driver.find_element_by_id('ctl00_ContentPlaceHolder1_SearchResultsNewControl_hResultsCount').text)[1])//10
+        for page in range(1, number):
+            profiles = self.driver.find_elements_by_class_name("teachers")
+            profiles = profiles[0].find_elements_by_class_name("teacher-name")
+            for person in profiles:
+                profiles_links.append(person.get_attribute("href"))
+            self.driver.get(f"{cat_link}{page_suffix}{page}")
+        return profiles_links
+
+    def get_person_info(self, link: str) -> dict:
+        """
+        Parses person by link and returns dictionary with reviews, education info, tution experience, prices, etc.
+        """
+        self.driver.get(link)
+        person_info = {}
+        # Get person name
+        person_info["ФИО"] = self.driver.find_element_by_class_name('teacher-name').text
+        # Get education info
+        edu = self.driver.find_element_by_class_name("education")
+        person_info["Образование"] = edu.text.split("\n")[1]
+        # Get age
+        age = self.driver.find_elements_by_class_name('col-8')
+        person_info["Возраст"] = int(re.split(r"[гл]", age[0].text)[0])
+        # Get tution experience
+        exp = self.driver.find_elements_by_class_name('col-8')
+        person_info["Репетиторский опыт (лет)"] = int(re.split(r"[гл]", exp[0].text)[0])
+        # Get number of reviews
+        reviews = self.driver.find_element_by_xpath("//div[@class='reviews in-nav']//div[@class='section-header']")
+        reviews = reviews.find_elements_by_tag_name('span')
+        person_info["Количество оценок"] = reviews[0].text
+        # Get good and bad reviews
+        reviews = self.driver.find_elements_by_class_name('review')
+        good_revs = 0
+        bad_revs = 0
+        for rev in reviews:
+            if("Положительный отзыв" in rev.text):
+                good_revs+=1
+            elif("Отрицательный отзыв" in rev.text):
+                bad_revs+=1
+        person_info["Положительных отзывов"] = good_revs
+        person_info["Отрицательных отзывов"] = bad_revs
+        # Get all services and prices
+        services = self.driver.find_element_by_xpath("//div[@class='subjects in-nav']")
+        if("60 мин" in services.text):
+            mins = "60 мин"
+        elif ("90 мин" in services.text):
+            mins = "90 мин"
+        elif ("45 мин" in services.text):
+            mins = "45 мин"
+        services = services.find_elements_by_xpath("//div[@class='subject-header row']")
+        names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
+        for i, ser in enumerate(services):
+            name = names[i].text
+            prices = ser.find_elements_by_xpath("//div[@class='col price']")
+            price1 = prices[0].text.replace("―", "")
+            price2 = prices[1].text.replace("―", "")
+            price3 = prices[2].text.replace("―", "")
+            person_info[f"{name} У РЕПЕТИТОРА (₽/{mins})"] = price1
+            person_info[f"{name} У УЧЕНИКА (₽/{mins})"] = price2
+            person_info[f"{name} У ДИСТАНЦИОННО (₽/{mins})"] = price3
+        return person_info
+
+    def write_json_file(self, cat_name: str, profi_data: list):
+            """
+            Prepares backup for parsed data
+            """
+            # restrain number of columns
+            columns = list(profi_data[0].keys())
+            for profi in profi_data[1:]:
+                for key in profi.keys():
+                    # Create limit for the number of columns to avoid "too many columns exception" in db
+                    if (key not in columns and len(columns) <= 500):
+                        columns.append(key)
+            updated_profi_data = []
+            for person in profi_data:
+                new_person = {}
+                for pair in person.items():
+                    if(pair[0] in columns and len(pair[0]) < 64):
+                        new_person.update({pair[0] : pair[1]})
+                updated_profi_data.append(new_person)
+
+            if not os.path.isdir("repetit_ru_json_data"):
+                os.mkdir("repetit_ru_json_data")
+
+            with open(f"repetit_ru_json_data\{cat_name}_data_file.json", "w") as write_file:
+                json.dump(updated_profi_data, write_file)
+
+    def parse(self):
+        database = WriteToDatabase("config_repetit_ru")
+        database.create_base()
+        # Start Webdriver with supressed logging
+        options = webdriver.ChromeOptions() 
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.driver = webdriver.Chrome(options=options)
+        # Get categories
+        self.get_category_links()
+        for category in self.link_list:
+            cat_name = category.split('/')[-2]
+            # Check if category is already parsed
+            if(os.path.exists(f"repetit_ru_json_data\{cat_name}_data_file.json")):
+                self.logger.warning(f"'{cat_name}' category is already parsed!")
+                continue
+            self.logger.info(f"Treating '{cat_name}' category")
+            counter = 0
+            person_info = []
+            try:
+                category_profiles = self.get_profiles_by_category(f'{category}{self.profile_suffix}')
+                self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                for person_link in category_profiles:
+                    person_info.append(self.get_person_info(person_link))
+                    counter+=1
+                    # print current state of the process
+                    percentage = (counter/len(category_profiles))*100
+                    if(percentage == 25):
+                        self.logger.info("25% of category was already parsed!")
+                    elif(percentage == 50):
+                        self.logger.info("50% of category was already parsed!")
+                    elif(percentage == 75):
+                        self.logger.info("75% of category was already parsed!")
+            except:
+                self.logger.critical("Problems with Internet connection or Web driver occured!")
+                self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
+            self.cat_profiles_dict[cat_name] = person_info
+            self.logger.info(f"'{cat_name}' category was parsed successfully!")
+            self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
+            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
+            database.create_and_write_table(f'repetit_ru_json_data\{cat_name}_data_file.json')
         self.driver.quit()

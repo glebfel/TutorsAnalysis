@@ -6,7 +6,7 @@ module = logging.getLogger('ParseWeb.WriteToDatabase')
 
 class WriteToDatabase():
     """Write JSON-file to database using MySQL"""
-    def __init__(self, config_file: str = 'config.conf'):
+    def __init__(self, config_file: str):
         """
         Class constructor
         """
