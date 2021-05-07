@@ -272,7 +272,7 @@ class ProfiRuParser(object):
 
     def test(self):
         self.logger.info("This is a test run for only hindi category")
-        database = WriteToDatabase()
+        database = WriteToDatabase('config_profi_ru.conf')
         database.create_base()
         # Start Webdriver with supressed logging
         options = webdriver.ChromeOptions() 
