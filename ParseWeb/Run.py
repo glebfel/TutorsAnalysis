@@ -1,6 +1,6 @@
 import logging
-from ParseWeb import ProfiParser
-from ParseWeb import RepetitRuParser
+from ProfiRuParser import ProfiRuParser
+from RepetitRuParser import RepetitRuParser
 
 def main():
     # create logger
@@ -16,7 +16,7 @@ def main():
     print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
     press = input()
     if (press == '1'):
-        Parser = ProfiParser()
+        Parser = ProfiRuParser()
         Parser.parse()
     else:
         Parser = RepetitRuParser()

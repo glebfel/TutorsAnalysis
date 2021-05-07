@@ -22,10 +22,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ProfiRuParser.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RepetitRuParser.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Test.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ParseWeb.py" />
     <Compile Include="Run.py">
       <SubType>Code</SubType>
     </Compile>
