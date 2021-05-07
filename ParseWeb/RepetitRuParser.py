@@ -81,11 +81,18 @@ class RepetitRuParser():
         reviews = self.driver.find_element_by_xpath("//div[@class='reviews in-nav']//div[@class='section-header']")
         reviews = reviews.find_elements_by_tag_name('span')
         person_info["Количество оценок"] = reviews[0].text
-        # Get good and bad reviews
-        good_revs = self.driver.find_elements_by_xpath("//span[@class='review-type good']")
-        bad_revs = self.driver.find_elements_by_xpath("//span[@class='review-type bad']")
-        person_info["Положительных отзывов"] = len(good_revs)
-        person_info["Отрицательных отзывов"] = len(bad_revs)
+        # Get reviews
+        rate_list = ['Оценка 0', 'Оценка 1', 'Оценка 2', 'Оценка 3', 'Оценка 4', 'Оценка 5']
+        for rate in rate_list:
+            person_info[rate] = 0
+        reviews = self.driver.find_elements_by_xpath("//div[@class='review-features']//div[@class='star-rating']")
+        for rev in reviews:
+            stars = rev.find_elements_by_tag_name("i")
+            count = 0
+            for s in stars:
+                if(s.get_attribute("class") == "icon-star w10"):
+                    count+=1
+            person_info[rate_list[count]] += 1
         # Get all services and prices and methods of works
         services = self.driver.find_element_by_xpath("//div[@class='subjects in-nav']")
         if ("90 мин" in services.text):
@@ -98,7 +105,9 @@ class RepetitRuParser():
         names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
         suffix = [f"У РЕПЕТИТОРА (₽/{mins})", f"У УЧЕНИКА (₽/{mins})", f"ДИСТАНЦИОННО (₽/{mins})"]
         # Initialize methods of work
-        methods = {"Работает дистанционно" : "", "Принимает у себя": "", "Выезд к клиенту" : ""}
+        methods = ["Работает дистанционно", "Принимает у себя", "Выезд к клиенту"]
+        for met in methods:
+            person_info[met] = ""
         for j, ser in enumerate(services):
             name = names[j].text
             prices = ser.find_elements_by_xpath("//div[@class='col price']")
@@ -106,8 +115,7 @@ class RepetitRuParser():
                 price = re.sub(r"[― ]", "", prices[i].text)
                 if(len(price)>0):
                     price = int(re.split(r"[тр]", price)[1])
-                    methods[list(methods.keys())[i%3]] = "+"
-                person_info.update(methods)
+                    person_info[methods[i%3]] = "+"
                 person_info[f"{name} {suffix[i%3]}"] = price
         return person_info
 
