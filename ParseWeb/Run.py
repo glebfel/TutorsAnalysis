@@ -15,7 +15,7 @@ def main():
     logger.info("Strating servece...")
     print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
     press = input()
-    if (press == 'p'):
+    if (press == '1'):
         Parser = ProfiParser()
         Parser.parse()
     else:
