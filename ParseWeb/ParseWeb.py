@@ -371,16 +371,10 @@ class RepetitRuParser():
         reviews = reviews.find_elements_by_tag_name('span')
         person_info["Количество оценок"] = reviews[0].text
         # Get good and bad reviews
-        reviews = self.driver.find_elements_by_class_name('review')
-        good_revs = 0
-        bad_revs = 0
-        for rev in reviews:
-            if("Положительный отзыв" in rev.text):
-                good_revs+=1
-            elif("Отрицательный отзыв" in rev.text):
-                bad_revs+=1
-        person_info["Положительных отзывов"] = good_revs
-        person_info["Отрицательных отзывов"] = bad_revs
+        good_revs = self.driver.find_elements_by_xpath("//span[@class='review-type good']")
+        bad_revs = self.driver.find_elements_by_xpath("//span[@class='review-type bad']")
+        person_info["Положительных отзывов"] = len(good_revs)
+        person_info["Отрицательных отзывов"] = len(bad_revs)
         # Get all services and prices
         services = self.driver.find_element_by_xpath("//div[@class='subjects in-nav']")
         if ("90 мин" in services.text):
@@ -482,10 +476,7 @@ class RepetitRuParser():
         category_profiles = self.get_profiles_by_category(f'https://repetit.ru/repetitors/yaponskiy-yazyk/')
         self.logger.info(f'Found {len(category_profiles)} profiles in yaponskiy-yazyk category')
         for person_link in category_profiles:
-            if(counter>2):
-                break;
             test_profis.append(self.get_person_info(person_link))
-            counter+=1
         self.write_json_file("yaponskiy-yazyk", test_profis)
         database.create_and_write_table("repetit_ru_json_data\yaponskiy-yazyk_data_file.json")
         self.driver.quit()
