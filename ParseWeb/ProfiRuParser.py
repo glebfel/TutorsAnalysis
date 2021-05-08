@@ -208,7 +208,7 @@ class ProfiRuParser(object):
         for category in self.link_list:
             cat_name = category.split('/')[-2]
             # Check if category is already parsed
-            if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
+            if(os.path.exists(f"profi_ru_json_data\{cat_name}_data_file.json")):
                 self.logger.warning(f"'{cat_name}' category is already parsed!")
                 continue
             self.logger.info(f"Treating '{cat_name}' category")
@@ -235,12 +235,12 @@ class ProfiRuParser(object):
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
-            database.create_and_write_table(f'json_data\{cat_name}_data_file.json')
+            database.create_and_write_table(f'profi_ru_json_data\{cat_name}_data_file.json')
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
             # Check if categroy is already parsed
-            if(os.path.exists(f"json_data\{cat_name}_data_file.json")):
+            if(os.path.exists(f"profi_ru_json_data\{cat_name}_data_file.json")):
                 self.logger.warning(f"'{cat_name}' category is already parsed!")
                 continue
             self.logger.info(f"Treating '{cat_name}' category")
@@ -267,7 +267,7 @@ class ProfiRuParser(object):
             self.logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
             self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
-            database.create_and_write_table(f'json_data\{cat_name}_data_file.json')
+            database.create_and_write_table(f'profi_ru_json_data\{cat_name}_data_file.json')
         self.driver.quit()
 
     def test(self):
@@ -287,5 +287,5 @@ class ProfiRuParser(object):
         except:
             self.logger.critical("Problems with Internet connection or Web driver occured!")
         self.write_json_file("hindi", test_profis)
-        database.create_and_write_table("json_data\hindi_data_file.json")
+        database.create_and_write_table("profi_ru_json_data\hindi_data_file.json")
         self.driver.quit()
