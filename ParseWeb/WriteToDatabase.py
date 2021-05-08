@@ -11,7 +11,7 @@ class WriteToDatabase():
         Class constructor
         """
         self.conf_info = self.read_config(config_file)
-        self.logger = logging.getLogger("ParseWeb.WriteToDatabase.WriteToDatabase")
+        self.logger = logging.getLogger("ParseWeb.WriteToDatabase")
 
     def read_config(self, config_file: str) -> dict:
         """

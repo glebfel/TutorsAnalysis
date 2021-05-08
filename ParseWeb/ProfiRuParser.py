@@ -220,14 +220,6 @@ class ProfiRuParser(object):
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
-                    # print current state of the process
-                    percentage = (counter/len(category_profiles))*100
-                    if(percentage == 25):
-                        self.logger.info("25% of category was already parsed!")
-                    elif(percentage == 50):
-                        self.logger.info("50% of category was already parsed!")
-                    elif(percentage == 75):
-                        self.logger.info("75% of category was already parsed!")
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
@@ -252,14 +244,6 @@ class ProfiRuParser(object):
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
-                    # print current state of the process
-                    percentage = (counter/len(category_profiles))*100
-                    if(percentage == 25):
-                        self.logger.info("25% of category was already parsed!")
-                    elif(percentage == 50):
-                        self.logger.info("50% of category was already parsed!")
-                    elif(percentage == 75):
-                        self.logger.info("75% of category was already parsed!")
             except:
                 self.logger.critical("Problems with Internet connection or Web driver occured!")
                 self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
