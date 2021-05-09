@@ -103,7 +103,7 @@ class RepetitRuParser():
             mins = "60 мин"
         services = services.find_elements_by_xpath("//div[@class='subject-header row']")
         names = self.driver.find_elements_by_xpath("//div[@class='col subject-name']")
-        suffix = [f"У РЕПЕТИТОРА (₽/{мин})", f"У УЧЕНИКА (₽/{мин})", f"ДИСТАНЦИОННО (₽/{мин})"]
+        suffix = [f"У РЕПЕТИТОРА (₽/{mins})", f"У УЧЕНИКА (₽/{mins})", f"ДИСТАНЦИОННО (₽/{mins})"]
         # Initialize methods of work
         methods = ["Работает дистанционно", "Принимает у себя", "Выезд к клиенту"]
         for met in methods:
