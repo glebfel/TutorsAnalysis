@@ -168,6 +168,8 @@ class RepetitRuParser():
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
+                    if(counter == len(category_profiles) - 1):
+                        logger.info(f"End of parsing {cat_name} category")
             except:
                 logger.critical("Problems with Internet connection or Web driver occured!")
                 logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
