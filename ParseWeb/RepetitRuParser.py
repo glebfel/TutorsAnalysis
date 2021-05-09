@@ -16,33 +16,33 @@ module = logging.getLogger('ParseWeb.RepetitRuParser')
 class RepetitRuParser():
     
     MAIN_URL = "https://repetit.ru/repetitors/"
-    logger = logging.getLogger("ParseWeb.RepetitRuParser")
-
+   
     def __init__(self):
         """
         Class constructor
         """
         self.link_list = []
         self.cat_profiles_dict = {}
+        self.logger = logging.getLogger("ParseWeb.RepetitRuParser")
 
     def get_category_links(self):
         """
         Gets categories and their links for later parsing
         """
-        logger.info("Gathering categories links...")
+        self.logger.info("Gathering categories links...")
         try:
             self.driver.get(self.MAIN_URL)
             menu = self.driver.find_elements_by_class_name("dropdown-menu")
             categories = menu[0].find_elements_by_tag_name("a")
         except:
-            logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
+            self.logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
             return
         # Gather link_list
         for cat in categories:
             link = cat.get_attribute("href")
             if("#" not in link):
                self.link_list.append(link)
-        logger.info(f'Found {len(self.link_list)} categories!')
+        self.logger.info(f'Found {len(self.link_list)} categories!')
 
     def get_profiles_by_category(self, cat_link: str):
         """
@@ -157,31 +157,31 @@ class RepetitRuParser():
             cat_name = category.split('/')[-2]
             # Check if category is already parsed
             if(os.path.exists(f"repetit_ru_json_data\{cat_name}_data_file.json")):
-                logger.warning(f"'{cat_name}' category is already parsed!")
+                self.logger.warning(f"'{cat_name}' category is already parsed!")
                 continue
-            logger.info(f"Treating '{cat_name}' category")
+            self.logger.info(f"Treating '{cat_name}' category")
             counter = 0
             person_info = []
             try:
                 category_profiles = self.get_profiles_by_category(f'{category}')
-                logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
                     if(counter == len(category_profiles) - 1):
-                        logger.info(f"End of parsing {cat_name} category")
+                        self.logger.info(f"End of parsing {cat_name} category")
             except:
-                logger.critical("Problems with Internet connection or Web driver occured!")
-                logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
+                self.logger.critical("Problems with Internet connection or Web driver occured!")
+                self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
-            logger.info(f"'{cat_name}' category was parsed successfully!")
+            self.logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
-            logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
+            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(f'repetit_ru_json_data\{cat_name}_data_file.json')
         self.driver.quit()
 
     def test(self):
-        logger.info("This is a test run for only yaponskiy-yazyk category")
+        self.logger.info("This is a test run for only 'ekonomika' category")
         database = WriteToDatabase('config_repetit_ru.conf')
         database.create_base()
         # Start Webdriver with supressed logging
@@ -190,12 +190,12 @@ class RepetitRuParser():
         self.driver = webdriver.Chrome(options=options)
         counter = 0
         test_profis = []
-        category_profiles = self.get_profiles_by_category(f'https://repetit.ru/repetitors/yaponskiy-yazyk/')
-        logger.info(f'Found {len(category_profiles)} profiles in yaponskiy-yazyk category')
+        category_profiles = self.get_profiles_by_category(f'https://repetit.ru/repetitors/ekonomika/')
+        self.logger.info(f'Found {len(category_profiles)} profiles in yaponskiy-yazyk category')
         for person_link in category_profiles:
             test_profis.append(self.get_person_info(person_link))
-        self.write_json_file("yaponskiy-yazyk", test_profis)
-        database.create_and_write_table("repetit_ru_json_data\yaponskiy-yazyk_data_file.json")
+        self.write_json_file("ekonomika", test_profis)
+        database.create_and_write_table("repetit_ru_json_data\ekonomika_data_file.json")
         self.driver.quit()
 
 
