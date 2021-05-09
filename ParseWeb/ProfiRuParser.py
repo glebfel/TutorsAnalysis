@@ -21,6 +21,8 @@ class ProfiRuParser(object):
     other_links_dict = {'Другие языки': 'languages',
                         'Интеллектуальные игры': 'int_games',
                         'Подготовка к экзаменам': 'exams'}
+
+    logger = logging.getLogger("ParseWeb.ProfiRuParser")
     
     def __init__(self):
         """
@@ -29,8 +31,7 @@ class ProfiRuParser(object):
         self.link_list = []
         self.others_links = []
         self.cat_profiles_dict = {}
-        self.logger = logging.getLogger("ParseWeb.ProfiRuParser")
-
+       
     def write_json_file(self, cat_name: str, profi_data: list):
         """
         Prepares backup for parsed data
@@ -60,14 +61,14 @@ class ProfiRuParser(object):
         """
         Gets categories and their links for later parsing
         """
-        self.logger.info("Gathering categories links...")
+        logger.info("Gathering categories links...")
         try:
             category_link = "services-catalog__column-title ui-link _t37mbJS _2fIr6we _2l1CpUa"
             self.driver.get(self.MAIN_URL)
             categories = self.driver.find_elements_by_class_name("services-catalog__content")
             elems = categories[0].find_elements_by_xpath("//a[@class]")
         except:
-            self.logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
+            logger.critical("Problems with Internet connection or Web driver occured! Cannot gather category list!")
             return
         search_cat = True
         # Compose two links lists: for subject categories, and for generic categories
@@ -84,7 +85,7 @@ class ProfiRuParser(object):
                 self.others_links[-1].append(elem.text)
         # Move english category to the end because it is the largest one
         self.link_list.append(self.link_list.pop(self.link_list.index('https://profi.ru/repetitor/english/')))
-        self.logger.info(f'Found {len(self.link_list) + len(self.others_links)} categories')
+        logger.info(f'Found {len(self.link_list) + len(self.others_links)} categories')
 
     def get_person_info(self, link: str) -> dict:
         """
@@ -186,7 +187,6 @@ class ProfiRuParser(object):
                 button = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, '//a[@data-shmid="pagination_next"]')))
             except:
-                self.logger.info("End of category")
                 button = False
         profiles = self.driver.find_elements_by_xpath('//a[@data-shmid="desktop-profile__avatar"]')
         profiles_links = [person.get_attribute("href") for person in profiles]
@@ -211,51 +211,56 @@ class ProfiRuParser(object):
             if(os.path.exists(f"profi_ru_json_data\{cat_name}_data_file.json")):
                 self.logger.warning(f"'{cat_name}' category is already parsed!")
                 continue
-            self.logger.info(f"Treating '{cat_name}' category")
+            logger.info(f"Treating '{cat_name}' category")
             counter = 0
             person_info = []
             try:
                 category_profiles = self.get_profiles_by_category(f'{category}{self.profile_suffix}')
-                self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                logger.info(f"Start of parsing '{cat_name}' categor...")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
+                    if(counter == len(category_profiles)):
+                        logger.info(f"End of parsing '{cat_name}' category...")
             except:
-                self.logger.critical("Problems with Internet connection or Web driver occured!")
-                self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
+                logger.critical("Problems with Internet connection or Web driver occured!")
+                logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
-            self.logger.info(f"'{cat_name}' category was parsed successfully!")
+            logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
-            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
+            logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(f'profi_ru_json_data\{cat_name}_data_file.json')
         # Treat generic categories
         for cat_list in self.others_links:
             cat_name = cat_list[0]
             # Check if categroy is already parsed
             if(os.path.exists(f"profi_ru_json_data\{cat_name}_data_file.json")):
-                self.logger.warning(f"'{cat_name}' category is already parsed!")
+                logger.warning(f"'{cat_name}' category is already parsed!")
                 continue
-            self.logger.info(f"Treating '{cat_name}' category")
+            logger.info(f"Treating '{cat_name}' category")
             counter = 0
             person_info = []
             try:
                 category_profiles = self.get_profiles_by_category(f'{category}{self.profile_suffix}')
-                self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
+                    if(counter == len(category_profiles)):
+                        logger.info(f"End of parsing {cat_name} category")
             except:
-                self.logger.critical("Problems with Internet connection or Web driver occured!")
-                self.logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
+                logger.critical("Problems with Internet connection or Web driver occured!")
+                logger.exception(f"Only {counter} profiles of '{cat_name}' category were parsed")
             self.cat_profiles_dict[cat_name] = person_info
-            self.logger.info(f"'{cat_name}' category was parsed successfully!")
+            logger.info(f"'{cat_name}' category was parsed successfully!")
             self.write_json_file(cat_name, self.cat_profiles_dict[cat_name])
-            self.logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
+            logger.info(f'{cat_name}_data_file.json with parsed data was created successfully!')
             database.create_and_write_table(f'profi_ru_json_data\{cat_name}_data_file.json')
         self.driver.quit()
 
     def test(self):
-        self.logger.info("This is a test run for only hindi category")
+        logger.info("This is a test run for only hindi category")
         database = WriteToDatabase('config_profi_ru.conf')
         database.create_base()
         # Start Webdriver with supressed logging
@@ -265,11 +270,11 @@ class ProfiRuParser(object):
         test_profis = []
         try:
             category_profiles = self.get_profiles_by_category(f'https://profi.ru/repetitor/hindi/{self.profile_suffix}')
-            self.logger.info(f'Found {len(category_profiles)} profiles in hindi category')
+            logger.info(f'Found {len(category_profiles)} profiles in hindi category')
             for person_link in category_profiles:
                 test_profis.append(self.get_person_info(person_link))             
         except:
-            self.logger.critical("Problems with Internet connection or Web driver occured!")
+            logger.critical("Problems with Internet connection or Web driver occured!")
         self.write_json_file("hindi", test_profis)
         database.create_and_write_table("profi_ru_json_data\hindi_data_file.json")
         self.driver.quit()
