@@ -165,6 +165,7 @@ class RepetitRuParser():
             try:
                 category_profiles = self.get_profiles_by_category(f'{category}')
                 self.logger.info(f"Found {len(category_profiles)} profiles in '{cat_name}' category")
+                self.logger.info(f"Start of parsing '{cat_name}' category...")
                 for person_link in category_profiles:
                     person_info.append(self.get_person_info(person_link))
                     counter+=1
