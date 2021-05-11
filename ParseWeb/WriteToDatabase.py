@@ -80,5 +80,5 @@ class WriteToDatabase():
             base_connector.cursor().execute(person_query)
             base_connector.commit()
         base_connector.cursor().close()
-        self.logger.info(f"End of writing table for '{table_name}' category...")
+        self.logger.info(f"End of writing table for '{table_name}' category...\n")
 
