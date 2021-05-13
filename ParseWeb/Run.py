@@ -15,12 +15,17 @@ def main():
     logger.info("Strating servece...")
     print("Do you want to run profi.ru or repetit.ru parsing?\nPress '1' for profi.ru or '2' for repetit.ru...")
     press = input()
-    if (press == '1'):
-        Parser = ProfiRuParser()
-        Parser.parse()
-    else:
-        Parser = RepetitRuParser()
-        Parser.parse()
+    while(true):
+        if (press == '1'):
+            Parser = ProfiRuParser()
+            Parser.parse()
+            break;
+        elif (press == '2'):
+            Parser = RepetitRuParser()
+            Parser.parse()
+            break;
+        else:
+            print('Got wrong value. Please, type again...')
     logger.info("Stoping servece...")
 
 if __name__ == '__main__':
