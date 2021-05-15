@@ -182,7 +182,7 @@ class RepetitRuParser():
         self.driver.quit()
 
     def test(self):
-        self.logger.info("This is a test run for only 'ekonomika' category")
+        self.logger.info("This is a test run for only 'biologiya' category")
         database = WriteToDatabase('config_repetit_ru.conf')
         database.create_base()
         # Start Webdriver with supressed logging
@@ -191,12 +191,14 @@ class RepetitRuParser():
         self.driver = webdriver.Chrome(options=options)
         counter = 0
         test_profis = []
-        category_profiles = self.get_profiles_by_category(f'https://repetit.ru/repetitors/ekonomika/')
-        self.logger.info(f'Found {len(category_profiles)} profiles in yaponskiy-yazyk category')
+        category_profiles = self.get_profiles_by_category('https://repetit.ru/repetitors/biologiya/')
+        self.logger.info(f'Found {len(category_profiles)} profiles in biologiya category')
         for person_link in category_profiles:
             test_profis.append(self.get_person_info(person_link))
-        self.write_json_file("ekonomika", test_profis)
-        database.create_and_write_table("repetit_ru_json_data\ekonomika_data_file.json")
+            if(counter>1500):
+                break;
+        self.write_json_file("biologiya", test_profis)
+        database.create_and_write_table("repetit_ru_json_data\biologiya_data_file.json")
         self.driver.quit()
 
 

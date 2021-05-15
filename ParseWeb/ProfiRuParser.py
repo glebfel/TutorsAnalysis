@@ -13,7 +13,7 @@ from WriteToDatabase import WriteToDatabase
 
 module = logging.getLogger('ParseWeb.ProfiRuParser')
 
-class ProfiRuParser(object):
+class ProfiRuParser():
 
     MAIN_URL = "https://profi.ru/services/repetitor/"
     profile_suffix = r'?seamless=1&tabName=PROFILES'
