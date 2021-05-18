@@ -28,9 +28,6 @@
     <Compile Include="RepetitRuParser.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Test.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Run.py">
       <SubType>Code</SubType>
     </Compile>
