@@ -4,6 +4,3 @@
 
 /ParseWeb/__pycache__
 /ParseWeb/hindi_data_file.json
-*.json
-*.csv
-*.conf
